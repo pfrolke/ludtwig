@@ -1,6 +1,7 @@
 # NEXT-VERSION
 
 - Add parsing support for Symfony's `{% form_theme form ... %}` tag (with optional `with` clause and `only` keyword)
+- [#189](https://github.com/MalteJanz/ludtwig/issues/189) Fix parser crash when an HTML attribute value contains `>` inside a quoted string (e.g. `data-prop=">"`)
 
 # v0.10.0
 

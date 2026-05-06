@@ -51,12 +51,10 @@ impl Rule for RuleHtmlAttributeNameKebabCase {
 
 /// Returns true when `node` is contained within an `<svg>` element.
 fn is_inside_svg(node: &SyntaxNode) -> bool {
-    node.ancestors()
-        .filter_map(HtmlTag::cast)
-        .any(|tag| {
-            tag.name()
-                .is_some_and(|name| name.text().eq_ignore_ascii_case("svg"))
-        })
+    node.ancestors().filter_map(HtmlTag::cast).any(|tag| {
+        tag.name()
+            .is_some_and(|name| name.text().eq_ignore_ascii_case("svg"))
+    })
 }
 
 #[cfg(test)]

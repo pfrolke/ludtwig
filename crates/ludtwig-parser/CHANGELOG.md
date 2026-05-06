@@ -1,5 +1,7 @@
 # NEXT-VERSION
 
+- Add parsing support for Symfony's `{% form_theme form ... %}` tag (with optional `with` clause and `only` keyword)
+
 # v0.10.0
 
 - [#179](https://github.com/MalteJanz/ludtwig/pull/179) Support parentheses-optional syntax for `same as` and

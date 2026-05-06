@@ -102,6 +102,8 @@ pub(crate) fn parse_twig_block_statement(
         Some(parse_twig_component(parser, m, child_parser))
     } else if parser.at(T!["props"]) {
         Some(parse_twig_props(parser, m))
+    } else if parser.at(T!["form_theme"]) {
+        Some(parse_twig_form_theme(parser, m))
     } else {
         match parse_shopware_twig_block_statement(parser, m, child_parser) {
             BlockParseResult::NothingFound(m) => {
@@ -931,6 +933,42 @@ fn parse_twig_extends(parser: &mut Parser, outer: Marker) -> CompletedMarker {
     parser.expect_any(TWIG_BLOCK_CLOSE_SET, &[T!["</"]]);
 
     parser.complete(outer, SyntaxKind::TWIG_EXTENDS)
+}
+
+fn parse_twig_form_theme(parser: &mut Parser, outer: Marker) -> CompletedMarker {
+    debug_assert!(parser.at(T!["form_theme"]));
+    parser.bump();
+
+    // Required: the form expression
+    if parse_twig_expression(parser).is_none() {
+        parser.add_error(ParseErrorBuilder::new("twig expression as form"));
+        parser.recover(&[T!["with"], T!["only"], T!["%}"], T!["-%}"], T!["~%}"], T!["</"]]);
+    }
+
+    // Optional theme: either `with <expr>` or a direct expression
+    if parser.at(T!["with"]) {
+        let with_m = parser.start();
+        parser.bump();
+        if parse_twig_expression(parser).is_none() {
+            parser.add_error(ParseErrorBuilder::new("twig expression as form theme"));
+            parser.recover(&[T!["only"], T!["%}"], T!["-%}"], T!["~%}"], T!["</"]]);
+        }
+        parser.complete(with_m, SyntaxKind::TWIG_FORM_THEME_WITH);
+    } else if !parser.at_set(TWIG_BLOCK_CLOSE_SET) && !parser.at(T!["only"]) && !parser.at_end() {
+        // Direct theme expression without `with` keyword
+        if parse_twig_expression(parser).is_none() {
+            parser.add_error(ParseErrorBuilder::new("twig expression as form theme"));
+            parser.recover(&[T!["only"], T!["%}"], T!["-%}"], T!["~%}"], T!["</"]]);
+        }
+    }
+
+    if parser.at(T!["only"]) {
+        parser.bump();
+    }
+
+    parser.expect_any(TWIG_BLOCK_CLOSE_SET, &[T!["</"]]);
+
+    parser.complete(outer, SyntaxKind::TWIG_FORM_THEME)
 }
 
 #[allow(clippy::too_many_lines)] // line count inflated by whitespace-control token variants in recovery sets
@@ -6230,6 +6268,139 @@ mod tests {
                       TK_ENDIF@17..22 "endif"
                       TK_WHITESPACE@22..23 " "
                       TK_MINUS_PERCENT_CURLY@23..26 "-%}""#]],
+        );
+    }
+
+    #[test]
+    fn parse_twig_form_theme_direct_string() {
+        check_parse(
+            r#"{% form_theme form 'MyBundle::form.html.twig' %}"#,
+            expect![[r#"
+                ROOT@0..48
+                  TWIG_FORM_THEME@0..48
+                    TK_CURLY_PERCENT@0..2 "{%"
+                    TK_WHITESPACE@2..3 " "
+                    TK_FORM_THEME@3..13 "form_theme"
+                    TWIG_EXPRESSION@13..18
+                      TWIG_LITERAL_NAME@13..18
+                        TK_WHITESPACE@13..14 " "
+                        TK_WORD@14..18 "form"
+                    TWIG_EXPRESSION@18..45
+                      TWIG_LITERAL_STRING@18..45
+                        TK_WHITESPACE@18..19 " "
+                        TK_SINGLE_QUOTES@19..20 "'"
+                        TWIG_LITERAL_STRING_INNER@20..44
+                          TK_WORD@20..28 "MyBundle"
+                          TK_COLON@28..29 ":"
+                          TK_COLON@29..30 ":"
+                          TK_WORD@30..34 "form"
+                          TK_DOT@34..35 "."
+                          TK_WORD@35..39 "html"
+                          TK_DOT@39..40 "."
+                          TK_WORD@40..44 "twig"
+                        TK_SINGLE_QUOTES@44..45 "'"
+                    TK_WHITESPACE@45..46 " "
+                    TK_PERCENT_CURLY@46..48 "%}""#]],
+        );
+    }
+
+    #[test]
+    fn parse_twig_form_theme_with_array() {
+        check_parse(
+            r#"{% form_theme form with ['MyBundle::form.html.twig'] %}"#,
+            expect![[r#"
+                ROOT@0..55
+                  TWIG_FORM_THEME@0..55
+                    TK_CURLY_PERCENT@0..2 "{%"
+                    TK_WHITESPACE@2..3 " "
+                    TK_FORM_THEME@3..13 "form_theme"
+                    TWIG_EXPRESSION@13..18
+                      TWIG_LITERAL_NAME@13..18
+                        TK_WHITESPACE@13..14 " "
+                        TK_WORD@14..18 "form"
+                    TWIG_FORM_THEME_WITH@18..52
+                      TK_WHITESPACE@18..19 " "
+                      TK_WITH@19..23 "with"
+                      TWIG_EXPRESSION@23..52
+                        TWIG_LITERAL_ARRAY@23..52
+                          TK_WHITESPACE@23..24 " "
+                          TK_OPEN_SQUARE@24..25 "["
+                          TWIG_LITERAL_ARRAY_INNER@25..51
+                            TWIG_EXPRESSION@25..51
+                              TWIG_LITERAL_STRING@25..51
+                                TK_SINGLE_QUOTES@25..26 "'"
+                                TWIG_LITERAL_STRING_INNER@26..50
+                                  TK_WORD@26..34 "MyBundle"
+                                  TK_COLON@34..35 ":"
+                                  TK_COLON@35..36 ":"
+                                  TK_WORD@36..40 "form"
+                                  TK_DOT@40..41 "."
+                                  TK_WORD@41..45 "html"
+                                  TK_DOT@45..46 "."
+                                  TK_WORD@46..50 "twig"
+                                TK_SINGLE_QUOTES@50..51 "'"
+                          TK_CLOSE_SQUARE@51..52 "]"
+                    TK_WHITESPACE@52..53 " "
+                    TK_PERCENT_CURLY@53..55 "%}""#]],
+        );
+    }
+
+    #[test]
+    fn parse_twig_form_theme_with_array_only() {
+        check_parse(
+            r#"{% form_theme form with ['MyBundle::form.html.twig'] only %}"#,
+            expect![[r#"
+                ROOT@0..60
+                  TWIG_FORM_THEME@0..60
+                    TK_CURLY_PERCENT@0..2 "{%"
+                    TK_WHITESPACE@2..3 " "
+                    TK_FORM_THEME@3..13 "form_theme"
+                    TWIG_EXPRESSION@13..18
+                      TWIG_LITERAL_NAME@13..18
+                        TK_WHITESPACE@13..14 " "
+                        TK_WORD@14..18 "form"
+                    TWIG_FORM_THEME_WITH@18..52
+                      TK_WHITESPACE@18..19 " "
+                      TK_WITH@19..23 "with"
+                      TWIG_EXPRESSION@23..52
+                        TWIG_LITERAL_ARRAY@23..52
+                          TK_WHITESPACE@23..24 " "
+                          TK_OPEN_SQUARE@24..25 "["
+                          TWIG_LITERAL_ARRAY_INNER@25..51
+                            TWIG_EXPRESSION@25..51
+                              TWIG_LITERAL_STRING@25..51
+                                TK_SINGLE_QUOTES@25..26 "'"
+                                TWIG_LITERAL_STRING_INNER@26..50
+                                  TK_WORD@26..34 "MyBundle"
+                                  TK_COLON@34..35 ":"
+                                  TK_COLON@35..36 ":"
+                                  TK_WORD@36..40 "form"
+                                  TK_DOT@40..41 "."
+                                  TK_WORD@41..45 "html"
+                                  TK_DOT@45..46 "."
+                                  TK_WORD@46..50 "twig"
+                                TK_SINGLE_QUOTES@50..51 "'"
+                          TK_CLOSE_SQUARE@51..52 "]"
+                    TK_WHITESPACE@52..53 " "
+                    TK_ONLY@53..57 "only"
+                    TK_WHITESPACE@57..58 " "
+                    TK_PERCENT_CURLY@58..60 "%}""#]],
+        );
+    }
+
+    #[test]
+    fn parse_twig_form_theme_missing_form() {
+        check_parse(
+            r#"{% form_theme %}"#,
+            expect![[r#"
+                ROOT@0..16
+                  TWIG_FORM_THEME@0..16
+                    TK_CURLY_PERCENT@0..2 "{%"
+                    TK_WHITESPACE@2..3 " "
+                    TK_FORM_THEME@3..13 "form_theme"
+                    TK_WHITESPACE@13..14 " "
+                    TK_PERCENT_CURLY@14..16 "%}"
+                error at 14..16: expected twig expression as form but found %}"#]],
         );
     }
 }

@@ -342,6 +342,8 @@ pub enum SyntaxKind {
     TK_DATE,
     #[token("include")]
     TK_INCLUDE,
+    #[token("form_theme")]
+    TK_FORM_THEME,
     #[token("source")]
     TK_SOURCE,
 
@@ -504,6 +506,9 @@ pub enum SyntaxKind {
     // twig props
     TWIG_PROPS,
     TWIG_PROP_DECLARATION,
+    // twig form_theme
+    TWIG_FORM_THEME,
+    TWIG_FORM_THEME_WITH,
     // twig component
     TWIG_COMPONENT,
     TWIG_COMPONENT_STARTING_BLOCK,
@@ -732,6 +737,7 @@ macro_rules! T {
     ["random"] => { $crate::syntax::untyped::SyntaxKind::TK_RANDOM };
     ["date"] => { $crate::syntax::untyped::SyntaxKind::TK_DATE };
     ["include"] => { $crate::syntax::untyped::SyntaxKind::TK_INCLUDE };
+    ["form_theme"] => { $crate::syntax::untyped::SyntaxKind::TK_FORM_THEME };
     ["source"] => { $crate::syntax::untyped::SyntaxKind::TK_SOURCE };
     ["trans"] => { $crate::syntax::untyped::SyntaxKind::TK_TRANS };
     ["endtrans"] => { $crate::syntax::untyped::SyntaxKind::TK_ENDTRANS };
@@ -902,6 +908,7 @@ impl fmt::Display for SyntaxKind {
             SyntaxKind::TK_RANDOM => "random",
             SyntaxKind::TK_DATE => "date",
             SyntaxKind::TK_INCLUDE => "include",
+            SyntaxKind::TK_FORM_THEME => "form_theme",
             SyntaxKind::TK_SOURCE => "source",
             SyntaxKind::TK_TRANS => "trans",
             SyntaxKind::TK_ENDTRANS => "endtrans",

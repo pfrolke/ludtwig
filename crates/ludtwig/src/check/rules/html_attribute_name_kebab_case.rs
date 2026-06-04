@@ -129,6 +129,15 @@ mod tests {
     }
 
     #[test]
+    fn rule_does_not_report_stimulus_double_dash_scoped_controller() {
+        test_rule_does_not_fix(
+            "html-attribute-name-kebab-case",
+            r#"<div data-dir--controller="my-controller"></div>"#,
+            expect![[r#"<div data-dir--controller="my-controller"></div>"#]],
+        );
+    }
+
+    #[test]
     fn rule_fixes() {
         test_rule_fix(
             "html-attribute-name-kebab-case",

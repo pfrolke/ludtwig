@@ -106,13 +106,6 @@ pub fn is_valid_alphanumeric_kebab_case(s: &str) -> bool {
                 return false;
             }
         }
-
-        // no two minus next to each other
-        if let Some((_, next)) = next {
-            if c == '-' && *next == '-' {
-                return false;
-            }
-        }
     }
 
     true
@@ -383,7 +376,8 @@ mod tests {
         assert!(is_valid_alphanumeric_kebab_case("#vue-slot"));
         assert!(is_valid_alphanumeric_kebab_case("my-attribute2"));
 
-        assert!(!is_valid_alphanumeric_kebab_case("my--attribute"));
+        assert!(is_valid_alphanumeric_kebab_case("my--attribute")); // Stimulus.js scoped controller notation
+        assert!(is_valid_alphanumeric_kebab_case("data-dir--controller")); // Stimulus.js scoped controller notation
         assert!(!is_valid_alphanumeric_kebab_case("-my-attribute"));
         assert!(!is_valid_alphanumeric_kebab_case("my-attribute-"));
         assert!(!is_valid_alphanumeric_kebab_case("my-attribute--"));

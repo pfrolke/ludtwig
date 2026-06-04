@@ -942,7 +942,14 @@ fn parse_twig_form_theme(parser: &mut Parser, outer: Marker) -> CompletedMarker 
     // Required: the form expression
     if parse_twig_expression(parser).is_none() {
         parser.add_error(ParseErrorBuilder::new("twig expression as form"));
-        parser.recover(&[T!["with"], T!["only"], T!["%}"], T!["-%}"], T!["~%}"], T!["</"]]);
+        parser.recover(&[
+            T!["with"],
+            T!["only"],
+            T!["%}"],
+            T!["-%}"],
+            T!["~%}"],
+            T!["</"],
+        ]);
     }
 
     // Optional theme: either `with <expr>` or a direct expression

@@ -1,5 +1,6 @@
 # NEXT-VERSION
 
+- Remove the "no two consecutive dashes" guard from is_valid_alphanumeric_kebab_case. Double dashes in the middle of an attribute name are now valid (start/end dashes are still rejected).
 - [#188](https://github.com/MalteJanz/ludtwig/issues/188) fix `html-attribute-name-kebab-case` incorrectly flagging camelCase SVG attributes (e.g. `viewBox`, `preserveAspectRatio`) by skipping the rule inside `<svg>` elements
 
 # v0.13.0

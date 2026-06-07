@@ -2216,4 +2216,27 @@ mod tests {
                       TK_PERCENT_CURLY@40..42 "%}""#]],
         );
     }
+
+    #[test]
+    fn parse_twig_expression_null_safe_accessor() {
+        check_parse(
+            r"{{ object?.param }}",
+            expect![[r#"
+                ROOT@0..19
+                  TWIG_VAR@0..19
+                    TK_OPEN_CURLY_CURLY@0..2 "{{"
+                    TWIG_EXPRESSION@2..16
+                      TWIG_NULL_SAFE_ACCESSOR@2..16
+                        TWIG_OPERAND@2..9
+                          TWIG_LITERAL_NAME@2..9
+                            TK_WHITESPACE@2..3 " "
+                            TK_WORD@3..9 "object"
+                        TK_QUESTION_DOT@9..11 "?."
+                        TWIG_OPERAND@11..16
+                          TWIG_LITERAL_NAME@11..16
+                            TK_WORD@11..16 "param"
+                    TK_WHITESPACE@16..17 " "
+                    TK_CLOSE_CURLY_CURLY@17..19 "}}""#]],
+        );
+    }
 }

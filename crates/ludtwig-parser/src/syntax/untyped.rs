@@ -76,6 +76,8 @@ pub enum SyntaxKind {
     TK_EXCLAMATION_MARK_EQUALS,
     #[token("!==")]
     TK_EXCLAMATION_MARK_DOUBLE_EQUALS,
+    #[token("?.")]
+    TK_QUESTION_DOT,
     #[token("?")]
     TK_QUESTION_MARK,
     #[token("??")]
@@ -402,6 +404,7 @@ pub enum SyntaxKind {
 
     TWIG_OPERAND, // covers the operands in TWIG_ACCESSOR, TWIG_INDEX_LOOKUP, TWIG_PIPE and TWIG_FUNCTION_CALL
     TWIG_ACCESSOR, // accessor node like 'product.price'
+    TWIG_NULL_SAFE_ACCESSOR, // null-safe accessor node like 'product?.price'
     TWIG_FILTER,  // filter node like 'name|title'
 
     TWIG_INDEX_LOOKUP, // indexer node like 'products[0]'
@@ -606,6 +609,7 @@ macro_rules! T {
     ["!"] => { $crate::syntax::untyped::SyntaxKind::TK_EXCLAMATION_MARK };
     ["!="] => { $crate::syntax::untyped::SyntaxKind::TK_EXCLAMATION_MARK_EQUALS };
     ["!=="] => { $crate::syntax::untyped::SyntaxKind::TK_EXCLAMATION_MARK_DOUBLE_EQUALS };
+    ["?."] => { $crate::syntax::untyped::SyntaxKind::TK_QUESTION_DOT };
     ["?"] => { $crate::syntax::untyped::SyntaxKind::TK_QUESTION_MARK };
     ["??"] => { $crate::syntax::untyped::SyntaxKind::TK_DOUBLE_QUESTION_MARK };
     ["%"] => { $crate::syntax::untyped::SyntaxKind::TK_PERCENT };
@@ -777,6 +781,7 @@ impl fmt::Display for SyntaxKind {
             SyntaxKind::TK_EXCLAMATION_MARK => "!",
             SyntaxKind::TK_EXCLAMATION_MARK_EQUALS => "!=",
             SyntaxKind::TK_EXCLAMATION_MARK_DOUBLE_EQUALS => "!==",
+            SyntaxKind::TK_QUESTION_DOT => "?.",
             SyntaxKind::TK_QUESTION_MARK => "?",
             SyntaxKind::TK_DOUBLE_QUESTION_MARK => "??",
             SyntaxKind::TK_PERCENT => "%",

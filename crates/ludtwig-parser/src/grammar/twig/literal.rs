@@ -59,6 +59,8 @@ pub(crate) fn parse_postfix_operators(
         |p| {
             if p.at(T!["."]) {
                 node = parse_twig_accessor(p, node.clone());
+            } else if p.at(T!["?."]) {
+                node = parse_twig_null_safe_accessor(p, node.clone());
             } else if p.at(T!["["]) {
                 node = parse_twig_indexer(p, node.clone());
             } else if p.at(T!["|"]) {
@@ -370,6 +372,41 @@ fn parse_twig_accessor(parser: &mut Parser, mut last_node: CompletedMarker) -> C
 
     // complete the outer marker
     let mut node = parser.complete(outer, SyntaxKind::TWIG_ACCESSOR);
+
+    // check for optional function call
+    if parser.at(T!["("]) {
+        node = parse_twig_function(parser, node);
+    }
+
+    node
+}
+
+fn parse_twig_null_safe_accessor(
+    parser: &mut Parser,
+    mut last_node: CompletedMarker,
+) -> CompletedMarker {
+    debug_assert!(parser.at(T!["?."]));
+
+    // wrap last_node in an operand and create outer marker
+    let m = parser.precede(last_node);
+    last_node = parser.complete(m, SyntaxKind::TWIG_OPERAND);
+    let outer = parser.precede(last_node);
+
+    // bump the operator
+    parser.bump();
+
+    // parse the rhs and wrap it also in an operand
+    let m = parser.start();
+    if parse_twig_name(parser).is_none() {
+        parser.add_error(ParseErrorBuilder::new(
+            "twig variable property, key or method",
+        ));
+        parser.recover(TWIG_EXPRESSION_RECOVERY_SET);
+    }
+    parser.complete(m, SyntaxKind::TWIG_OPERAND);
+
+    // complete the outer marker
+    let mut node = parser.complete(outer, SyntaxKind::TWIG_NULL_SAFE_ACCESSOR);
 
     // check for optional function call
     if parser.at(T!["("]) {
